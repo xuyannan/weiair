@@ -21,14 +21,12 @@ app.use(connect.query());
 
 var api = new AqiApi('QfEJyi3oWKSBCnKrqp1v');
 var db = require('mongojs').connect(C.db.url , C.db.collections);
-var tpl = '<%=area%>\n\r[污染指数] <%=aqi%>\n\r[pm2.5浓度] <%=pm2_5%>\n\r[空气质量] <%=quality%> \n\r[更新时间] <%=time_point%>';
-var compiled = ejs.compile(tpl);
 
 app.use('/', wechat('weiair', function (req, res, next) {
   // 微信输入信息都在req.weixin上
   var message = req.weixin;
   var city = message.Content;
-  console.log('getting data for ' + message.Content);
+  console.log(dateformat(new Date(), 'yyyy-mm-dd HH:MM:ss'), '[', message.Content, ']', '\r\r');
 
   var now = new Date();
   var serverTime = now.getTime();
@@ -36,45 +34,140 @@ app.use('/', wechat('weiair', function (req, res, next) {
   var clientTime = utcTime + C.timezone * 3600000;
   var requestTime =  new Date(clientTime);
   var now_str = dateformat(requestTime, 'yyyy-mm-dd-HH');
+  var getUsemDataForCity = function(params) {
+    api.getUsemPm25ForCity({
+      city: params.city,
+      callback: function(result) {
+        
+      }
+    });
+  } ;
 
-  db.aqi.find({'area': city, 'time_point': now_str}, function(error, result) {
-    if (error) {
-    } else if (result && result.length > 0 && now_str == result[0].time_point_of_latest_data ) {
-        console.log('命中cache:' + city + ' ' + now_str);
-        res.reply(compiled(result[0].data));
-    } else {
-      api.getAvgPm25ForCity(message.Content, function(data){
-        var time_point_of_latest_data = data.time_point.substring(0, 13).replace('T', '-');
-        data.time_point = data.time_point.substring(11, data.time_point.length-1);
-        res.reply(compiled(data));
-        if (!result || result.length == 0) {
-          db.aqi.save({
-            area: city,
-            data: data,
-            time_point: now_str,
-            time_point_of_latest_data: time_point_of_latest_data
-          } , function(error) {
-            if (error) {
-              console.log(error);
-            }
+  var aqidata = {
+    timepoint: now_str,
+    chinese: {},
+    usem: {}
+  };
+
+  var sendMessage = function(data) {
+    var tpl = '<%=area%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%>';
+    tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
+    var compiled = ejs.compile(tpl);
+    res.reply(compiled(data));
+  
+  };
+  
+  var getUsemData = function(data) {
+    db.usemaqi.find({'area': data.area, 'time_point': data.time_point}, function(error, result) {
+      if(error) {
+      } else if (result && result.length > 0 && data.time_point == result[0].time_point_of_latest_data) {
+          console.log('命中usem cache');
+          sendMessage({
+            area: data.area,
+            chinese: data,
+            usem: result[0].data
           });
-        } else {
-          db.aqi.update({'area': city, 'time_point': now_str}, 
-              {$set: {data: data, time_point_of_latest_data: time_point_of_latest_data}},
-              function(err, updated) {
-                if (err || !updated) {
-                  console.log(err);
-                } else {
-                  console.log('data update');
+      } else {
+        api.getUsemPm25ForCity({
+          city: data.area,
+          errorCallback: function() {
+            sendMessage({
+              area: data.area,
+              chinese: data,
+              usem: null
+            });
+          },
+          callback: function(res) {
+            var usemdata = res[0];
+            //res.reply(compiled(data));
+            var d = new Date(usemdata.time_point);
+            var time_point_of_latest_data = dateformat(d, 'yyyy-mm-dd-HH');
+            usemdata.time_point = dateformat(d, 'HH:00:00');
+            usemdata.quality = usemdata.quality.replace(/\(.*\)/, '');
+            sendMessage({
+              area: data.area,
+              chinese: data,
+              usem: usemdata
+            });
+            if (!result || result.length == 0) {
+              db.usemaqi.save({
+                area: data.area,
+                data: usemdata,
+                time_point: data.time_point,
+                time_point_of_latest_data: time_point_of_latest_data
+              } , function(error) {
+                if (error) {
+                  console.log('save usemaqi error: ', error);
                 }
-              }
-          ); 
-        }
-      },
-        function(data) {
-          res.reply('该城市还没有pm2.5数据，试试别的城市~');
-        }
-      );
+              });
+            } else {
+              db.usemaqi.update({'area': data.area, 'time_point': data.time_point}, 
+                  {$set: {data: usemdata, time_point_of_latest_data: time_point_of_latest_data}},
+                  function(err, updated) {
+                    if (err || !updated) {
+                      console.log('update usemaqi error: ', err);
+                    } else {
+                      console.log('usem data update');
+                    }
+                  }
+              ); 
+            }
+          }
+        });
+      
+      }
+    });
+  };
+
+  var getChineseData = function(params) {
+    db.aqi.find({'area': params.city, 'time_point': params.time_point}, function(error, result) {
+      if (error) {
+      } else if (result && result.length > 0 && params.time_point == result[0].time_point_of_latest_data ) {
+        console.log('命中chinese cache');
+        params.next(result[0]);
+      } else {
+        api.getAvgPm25ForCity({city: params.city, 
+          callback: function(data){
+            var time_point_of_latest_data = data.time_point.substring(0, 13).replace('T', '-');
+            data.time_point = data.time_point.substring(11, data.time_point.length-1);
+            params.next(data);
+            if (!result || result.length == 0) {
+              db.aqi.save({
+                area: city,
+                data: data,
+                time_point: now_str,
+                time_point_of_latest_data: time_point_of_latest_data
+              } , function(error) {
+                if (error) {
+                  console.log(error);
+                }
+              });
+            } else {
+              db.aqi.update({'area': city, 'time_point': now_str}, 
+                  {$set: {data: data, time_point_of_latest_data: time_point_of_latest_data}},
+                  function(err, updated) {
+                    if (err || !updated) {
+                      console.log(err);
+                    } else {
+                      console.log('chinese data update');
+                    }
+                  }
+              ); 
+            }
+          },
+          errorCallback: function(data) {
+            res.reply('该城市还没有pm2.5数据，试试别的城市~');
+          }
+        });
+      } 
+    });
+  };
+
+  getChineseData({
+    city: message.Content,
+    time_point: now_str,
+    next: function(data) {
+      getUsemData(data);
     }
   });
 
