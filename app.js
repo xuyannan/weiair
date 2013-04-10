@@ -22,6 +22,8 @@ app.use(connect.query());
 var api = new AqiApi('QfEJyi3oWKSBCnKrqp1v');
 var db = require('mongojs').connect(C.db.url , C.db.collections);
 
+app.use('/public', express.static(__dirname + "/public"));
+
 app.use('/', wechat('weiair', function (req, res, next) {
   // 微信输入信息都在req.weixin上
   var message = req.weixin;
