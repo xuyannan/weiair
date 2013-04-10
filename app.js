@@ -34,14 +34,6 @@ app.use('/', wechat('weiair', function (req, res, next) {
   var clientTime = utcTime + C.timezone * 3600000;
   var requestTime =  new Date(clientTime);
   var now_str = dateformat(requestTime, 'yyyy-mm-dd-HH');
-  var getUsemDataForCity = function(params) {
-    api.getUsemPm25ForCity({
-      city: params.city,
-      callback: function(result) {
-        
-      }
-    });
-  } ;
 
   var aqidata = {
     timepoint: now_str,
@@ -57,10 +49,10 @@ app.use('/', wechat('weiair', function (req, res, next) {
   
   };
   
-  var getUsemData = function(data) {
-    db.usemaqi.find({'area': data.area, 'time_point': data.time_point}, function(error, result) {
+  var getUsemData = function(data, request_time) {
+    db.usemaqi.find({'area': data.area, 'time_point': request_time}, function(error, result) {
       if(error) {
-      } else if (result && result.length > 0 && data.time_point == result[0].time_point_of_latest_data) {
+      } else if (result && result.length > 0 && request_time == result[0].time_point_of_latest_data) {
           console.log('命中usem cache');
           sendMessage({
             area: data.area,
@@ -93,7 +85,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
               db.usemaqi.save({
                 area: data.area,
                 data: usemdata,
-                time_point: data.time_point,
+                time_point: request_time,
                 time_point_of_latest_data: time_point_of_latest_data
               } , function(error) {
                 if (error) {
@@ -167,7 +159,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
     city: message.Content,
     time_point: now_str,
     next: function(data) {
-      getUsemData(data);
+      getUsemData(data, now_str);
     }
   });
 
