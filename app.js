@@ -26,7 +26,16 @@ app.use('/public', express.static(__dirname + "/public"));
 
 app.use('/', wechat('weiair', function (req, res, next) {
   // 微信输入信息都在req.weixin上
+  var welcome = '感谢您关注微空气！发送城市名称，如"北京"或"beijing"即可获取空气质量数据~';
   var message = req.weixin;
+  if (message.MsgType == 'event' && message.Event == 'subscribe') {
+    res.reply(welcome);
+    return;
+  }
+  if (message.MsgType == 'event' && message.Event == 'unsubscribe') {
+    console.log(message.FromUserName, ' say goodbye');
+    return;
+  }
   var city = message.Content;
   console.log(dateformat(new Date(), 'yyyy-mm-dd HH:MM:ss'), '[', message.Content, ']', '\r\r');
 
@@ -95,7 +104,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
                 }
               });
             } else {
-              db.usemaqi.update({'area': data.area, 'time_point': data.time_point}, 
+              db.usemaqi.update({'area': data.area, 'time_point': request_time}, 
                   {$set: {data: usemdata, time_point_of_latest_data: time_point_of_latest_data}},
                   function(err, updated) {
                     if (err || !updated) {
