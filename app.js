@@ -57,6 +57,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
     tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
     var compiled = ejs.compile(tpl);
     res.reply(compiled(data));
+    console.log('message send');
   
   };
   
@@ -160,6 +161,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
           },
           errorCallback: function(data) {
             res.reply('该城市还没有pm2.5数据，试试别的城市~');
+            console.log('message send');
           }
         });
       } 
