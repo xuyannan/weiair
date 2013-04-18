@@ -53,8 +53,14 @@ app.use('/', wechat('weiair', function (req, res, next) {
   };
 
   var sendMessage = function(data) {
-    var tpl = '<%=area%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%>';
+    if (!data.chinese && !data.usem && !data.weather) {
+      res.reply('Sorry，目前没有这个地方的空气污染指数或天气数据，换个别的城市试试~');
+      return ;
+    }
+    var tpl = '<%=area%>';
+    tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%><%}%>';
     tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
+    tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp2%>~<%=weather.temp1%><%}%>\n\r[更新时间] <%=weather.ptime%>'
     var compiled = ejs.compile(tpl);
     res.reply(compiled(data));
     console.log('message send');
@@ -63,10 +69,16 @@ app.use('/', wechat('weiair', function (req, res, next) {
 
   var getWeatherData = function(params) {
     var data = params.data;
-    sendMessage({
-      area: data.area,
-      chinese: data,
-      usem: result[0].data
+    api.getWeatherForCity({
+      city: data.area,
+      callback: function(weatherData) {
+        data.weather = weatherData.weatherinfo;
+        sendMessage(data);
+      },
+      errorCallback: function() {
+        console.log('get weather data for ', data.area, ' error');
+        sendMessage(data);
+      }
     });
     
   };
@@ -78,29 +90,30 @@ app.use('/', wechat('weiair', function (req, res, next) {
       if(error) {
       } else if (result && result.length > 0 && request_time == result[0].time_point_of_latest_data) {
           console.log('命中usem cache');
+          data.usem = result[0].data;
           params.next({
             area: data.area,
-            chinese: data,
+            chinese: data.chinese,
             usem: result[0].data
           });
       } else {
         api.getUsemPm25ForCity({
           city: data.area,
           errorCallback: function() {
+            console.log('no usem data for city: ', data.area);
             params.next({
               area: data.area,
-              chinese: data,
-              usem: result[0].data
+              chinese: data.chinese,
+              usem: null
             });
           },
           callback: function(res) {
             var usemdata = res[0];
-            //res.reply(compiled(data));
             var d = new Date(usemdata.time_point);
             var time_point_of_latest_data = dateformat(d, 'yyyy-mm-dd-HH');
             usemdata.time_point = dateformat(d, 'HH:00:00');
             usemdata.quality = usemdata.quality.replace(/\(.*\)/, '');
-            sendMessage({
+            params.next({
               area: data.area,
               chinese: data,
               usem: usemdata
@@ -140,13 +153,23 @@ app.use('/', wechat('weiair', function (req, res, next) {
       if (error) {
       } else if (result && result.length > 0 && params.time_point == result[0].time_point_of_latest_data ) {
         console.log('命中chinese cache');
-        params.next(result[0]);
+        //params.next(result[0]);
+        params.next({
+            area: params.city,
+            chinese: result[0].data,
+            usem: null
+        });
       } else {
         api.getAvgPm25ForCity({city: params.city, 
           callback: function(data){
             var time_point_of_latest_data = data.time_point.substring(0, 13).replace('T', '-');
             data.time_point = data.time_point.substring(11, data.time_point.length-1);
-            params.next(data);
+            data.time_point = '14:00:00';
+            params.next({
+                area: params.city,
+                chinese: data,
+                usem: null
+            });
             if (!result || result.length == 0) {
               db.aqi.save({
                 area: city,
@@ -172,8 +195,12 @@ app.use('/', wechat('weiair', function (req, res, next) {
             }
           },
           errorCallback: function(data) {
-            res.reply('该城市还没有pm2.5数据，试试别的城市~');
-            console.log('message send');
+            // res.reply('该城市还没有pm2.5数据，试试别的城市~');
+            console.log('no chinese data for ', params.city);
+            params.next({
+              area: params.city,
+              chinese: null
+            });
           }
         });
       } 
