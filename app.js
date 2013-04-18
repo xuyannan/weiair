@@ -60,13 +60,25 @@ app.use('/', wechat('weiair', function (req, res, next) {
     console.log('message send');
   
   };
+
+  var getWeatherData = function(params) {
+    var data = params.data;
+    sendMessage({
+      area: data.area,
+      chinese: data,
+      usem: result[0].data
+    });
+    
+  };
   
-  var getUsemData = function(data, request_time) {
+  var getUsemData = function(params) {
+    var data = params.data;
+    var request_time = params.request_time;
     db.usemaqi.find({'area': data.area, 'time_point': request_time}, function(error, result) {
       if(error) {
       } else if (result && result.length > 0 && request_time == result[0].time_point_of_latest_data) {
           console.log('命中usem cache');
-          sendMessage({
+          params.next({
             area: data.area,
             chinese: data,
             usem: result[0].data
@@ -75,10 +87,10 @@ app.use('/', wechat('weiair', function (req, res, next) {
         api.getUsemPm25ForCity({
           city: data.area,
           errorCallback: function() {
-            sendMessage({
+            params.next({
               area: data.area,
               chinese: data,
-              usem: null
+              usem: result[0].data
             });
           },
           callback: function(res) {
@@ -172,7 +184,16 @@ app.use('/', wechat('weiair', function (req, res, next) {
     city: message.Content,
     time_point: now_str,
     next: function(data) {
-      getUsemData(data, now_str);
+      //getUsemData(data, now_str);
+      getUsemData({
+        data: data, 
+        request_time: now_str,
+        next: function(data) {
+          getWeatherData({
+            data: data
+          });
+        }
+      });
     }
   });
 
