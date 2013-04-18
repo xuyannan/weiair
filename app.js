@@ -164,7 +164,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
           callback: function(data){
             var time_point_of_latest_data = data.time_point.substring(0, 13).replace('T', '-');
             data.time_point = data.time_point.substring(11, data.time_point.length-1);
-            data.time_point = '14:00:00';
+            // data.time_point = '14:00:00';
             params.next({
                 area: params.city,
                 chinese: data,
