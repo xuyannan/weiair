@@ -60,9 +60,10 @@ app.use('/', wechat('weiair', function (req, res, next) {
     var tpl = '<%=area%>';
     tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%><%}%>';
     tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
-    tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp2%>~<%=weather.temp1%><%}%>\n\r[更新时间] <%=weather.ptime%>'
+    tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp1%>~<%=weather.temp2%><%}%>\n\r[更新时间] <%=weather.ptime%>'
     var compiled = ejs.compile(tpl);
-    res.reply(compiled(data));
+    var message = compiled(data);
+    res.reply(message);
     console.log('message send');
   
   };
@@ -115,7 +116,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
             usemdata.quality = usemdata.quality.replace(/\(.*\)/, '');
             params.next({
               area: data.area,
-              chinese: data,
+              chinese: data.chinese,
               usem: usemdata
             });
             if (!result || result.length == 0) {
