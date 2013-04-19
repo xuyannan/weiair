@@ -52,6 +52,18 @@ app.use('/', wechat('weiair', function (req, res, next) {
     usem: {}
   };
 
+  var getRealnameByNickname = function(nickname) {
+    var names = {
+      '帝都': '北京',
+      '魔都': '上海',
+    };
+    if (!! names[nickname]) {
+      return names[nickname];
+    } else {
+      return nickname;
+    }
+  };
+
   var sendMessage = function(data) {
     if (!data.chinese && !data.usem && !data.weather) {
       res.reply('Sorry，目前没有这个地方的空气污染指数或天气数据，换个别的城市试试~');
@@ -208,8 +220,11 @@ app.use('/', wechat('weiair', function (req, res, next) {
     });
   };
 
+  var requestCity = message.Content;
+  requestCity = getRealnameByNickname(requestCity);
+
   getChineseData({
-    city: message.Content,
+    city: requestCity,
     time_point: now_str,
     next: function(data) {
       //getUsemData(data, now_str);
