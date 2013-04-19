@@ -19,7 +19,7 @@ var connect = require('connect');
 var app = connect();
 app.use(connect.query());
 
-var api = new AqiApi('QfEJyi3oWKSBCnKrqp1v');
+var api = new AqiApi(C.PM25APPKEY);
 var db = require('mongojs').connect(C.db.url , C.db.collections);
 
 app.use('/public', express.static(__dirname + "/public"));

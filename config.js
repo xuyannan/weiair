@@ -4,6 +4,7 @@ exports.config = function(){
             'url' : 'weiair',
             'collections' : ['aqi', 'usemaqi']
         },
-        'timezone': 8
+        'timezone': 8,
+        'PM25APPKEY': 'QfEJyi3oWKSBCnKrqp1v'
     };
 }
