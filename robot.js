@@ -15,18 +15,14 @@ var aqiSupportCities = [ '上海','东莞','中山','丽水','乌鲁木齐','佛
 
 var usemSupportCities = ['北京', '上海', '广州', '成都'];
 
-var now = new Date();
-
-var query_lastest_time_point = dateformat(now, 'yyyy-mm-dd-HH'));
-
-for (var i = 0, iMax = aqiSupportCities.length; i < iMax ; i++) {
-  var city = aqiSupportCities[i];
+var getChineseDataForCity = function(city, lastest_time_point) {
+  console.log('get chinese aqi data for city: ', city);
   db.aqi.find(
-    {area: city, time_point: query_lastet_time_point},
+    {area: city, time_point: lastest_time_point},
     function(error, result) {
       if (error) {
 
-      } else if (result && result.length > 0 && query_lastest_time_point == result[0].time_point_of_latest_data ) {
+      } else if (result && result.length > 0 && lastest_time_point == result[0].time_point_of_latest_data ) {
         // 数据已存在，不需要再次请求
       } else {
         api.getAvgPm25ForCity({
@@ -38,7 +34,7 @@ for (var i = 0, iMax = aqiSupportCities.length; i < iMax ; i++) {
               db.aqi.save({
                 area: city,
                 data: data,
-                time_point: query_lastest_time_point,
+                time_point: lastest_time_point,
                 time_point_of_latest_data: time_point_of_latest_data
               } , function(error) {
                 if (error) {
@@ -46,7 +42,7 @@ for (var i = 0, iMax = aqiSupportCities.length; i < iMax ; i++) {
                 }
               });
             } else {
-              db.aqi.update({'area': city, 'time_point': query_lastest_time_point}, 
+              db.aqi.update({'area': city, 'time_point': lastest_time_point}, 
                   {$set: {data: data, time_point_of_latest_data: time_point_of_latest_data}},
                   function(err, updated) {
                     if (err || !updated) {
@@ -66,10 +62,78 @@ for (var i = 0, iMax = aqiSupportCities.length; i < iMax ; i++) {
       }
     }
   );
-
-
-  
 };
+
+var getUsemDataForCity = function(city, lastest_time_point) {
+  console.log('get useem aqi data for city: ', city);
+  db.usemaqi.find({'area': city, 'time_point': lastest_time_point}, function(error, result) {
+    if(error) {
+    } else if (result && result.length > 0 && lastest_time_point == result[0].time_point_of_latest_data) {
+    } else {
+      api.getUsemPm25ForCity({
+        city: city,
+        errorCallback: function() {
+          console.log('no usem data for city: ', data.area);
+        },
+        callback: function(res) {
+          var usemdata = res[0];
+          var d = new Date(usemdata.time_point);
+          var time_point_of_latest_data = dateformat(d, 'yyyy-mm-dd-HH');
+          usemdata.time_point = dateformat(d, 'HH:00:00');
+          usemdata.quality = usemdata.quality.replace(/\(.*\)/, '');
+          if (!result || result.length == 0) {
+            db.usemaqi.save({
+              area: city,
+              data: usemdata,
+              time_point: lastest_time_point,
+              time_point_of_latest_data: time_point_of_latest_data
+            } , function(error) {
+              if (error) {
+                console.log('save usemaqi error: ', error);
+              }
+            });
+          } else {
+            db.usemaqi.update({'area': city, 'time_point': lastest_time_point}, 
+                {$set: {data: usemdata, time_point_of_latest_data: time_point_of_latest_data}},
+                function(err, updated) {
+                  if (err || !updated) {
+                    console.log('update usemaqi error: ', err);
+                  } else {
+                    console.log('usem data update');
+                  }
+                }
+            ); 
+          }
+        }
+      });
+    
+    }
+  });
+};
+
+var updateData = function() {
+  var now = new Date();
+  var serverTime = now.getTime();
+  var utcTime = serverTime + now.getTimezoneOffset() * 60000;
+  var clientTime = utcTime + C.timezone * 3600000;
+  var requestTime =  new Date(clientTime);
+  var query_lastest_time_point = dateformat(requestTime, 'yyyy-mm-dd-HH');
+  console.log('update data at ', dateformat(requestTime, 'yyyy-mm-dd HH:MM:ss'));
+  for (var i = 0, iMax = aqiSupportCities.length; i < iMax ; i++) {
+    var city = aqiSupportCities[i];
+    getChineseDataForCity(city, query_lastest_time_point);
+  };
+  for (var i = 0, iMax = usemSupportCities.length; i < iMax ; i++) {
+    var city = usemSupportCities[i];
+    getUsemDataForCity(city, query_lastest_time_point);
+  };
+};
+
+updateData();
+
+setInterval(function(){
+    updateData();
+}, 1000 * 60 * C.robotFrequency);
 
 
 

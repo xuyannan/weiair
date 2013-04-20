@@ -5,6 +5,7 @@ exports.config = function(){
             'collections' : ['aqi', 'usemaqi']
         },
         'timezone': 8,
-        'PM25APPKEY': 'QfEJyi3oWKSBCnKrqp1v'
+        'PM25APPKEY': 'QfEJyi3oWKSBCnKrqp1v',
+        'robotFrequency': 60 // min
     };
 }
