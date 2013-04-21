@@ -124,8 +124,8 @@ var getWeatherDataForCity = function(city, lastest_time_point) {
         },
         callback: function(res) {
           //var weatherdata = res.weatherinfo;
-          var t = res.weathinfo.ptime; // 08:00
-          var time_point_of_latest_data = lastest_time_point.substring(0, 11) + '-' + t.substring(0, 2);
+          var t = res.weatherinfo.ptime; // 08:00
+          var time_point_of_latest_data = lastest_time_point.substring(0, 11) + t.substring(0, 2);
 
           var weatherdata = {
             area: res.weatherinfo.city,
@@ -186,10 +186,10 @@ var updateData = function() {
 };
 
 updateData();
-
+/*
 setInterval(function(){
     updateData();
 }, 1000 * 60 * C.robotFrequency);
-
+*/
 
 
