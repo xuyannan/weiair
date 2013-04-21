@@ -111,6 +111,59 @@ var getUsemDataForCity = function(city, lastest_time_point) {
   });
 };
 
+var getWeatherDataForCity = function(city, lastest_time_point) {
+  console.log('get weather data for city: ', city);
+    db.weather.find({'area': city, 'time_point': lastest_time_point}, function(error, result) {
+    if(error) {
+    } else if (result && result.length > 0 && lastest_time_point == result[0].time_point_of_latest_data) {
+    } else {
+      api.getWeatherForCity({
+        city: city,
+        errorCallback: function() {
+          console.log('no weather data for city: ', data.area);
+        },
+        callback: function(res) {
+          //var weatherdata = res.weatherinfo;
+          var t = res.weathinfo.ptime; // 08:00
+          var time_point_of_latest_data = lastest_time_point.substring(0, 11) + '-' + t.substring(0, 2);
+
+          var weatherdata = {
+            area: res.weatherinfo.city,
+            data: {
+              temp1: res.weatherinfo.temp1,
+              temp2: res.weatherinfo.temp2,
+              weather: res.weatherinfo.weather,
+              time_point: res.weatherinfo.ptime
+            },
+            time_point: lastest_time_point,
+            time_point_of_latest_data: time_point_of_latest_data
+          }
+
+          if (!result || result.length == 0) {
+            db.weather.save(weatherdata , function(error) {
+              if (error) {
+                console.log('save usemaqi error: ', error);
+              }
+            });
+          } else {
+            db.weather.update({'area': city, 'time_point': lastest_time_point}, 
+                {$set: {data: weatherdata.data, time_point_of_latest_data: time_point_of_latest_data}},
+                function(err, updated) {
+                  if (err || !updated) {
+                    console.log('update weaterh error: ', err);
+                  } else {
+                    console.log('weather data update');
+                  }
+                }
+            ); 
+          }
+        }
+      });
+    
+    }
+  });
+};
+
 var updateData = function() {
   var now = new Date();
   var serverTime = now.getTime();
@@ -119,6 +172,7 @@ var updateData = function() {
   var requestTime =  new Date(clientTime);
   var query_lastest_time_point = dateformat(requestTime, 'yyyy-mm-dd-HH');
   console.log('update data at ', dateformat(requestTime, 'yyyy-mm-dd HH:MM:ss'));
+  /*
   for (var i = 0, iMax = aqiSupportCities.length; i < iMax ; i++) {
     var city = aqiSupportCities[i];
     getChineseDataForCity(city, query_lastest_time_point);
@@ -127,6 +181,8 @@ var updateData = function() {
     var city = usemSupportCities[i];
     getUsemDataForCity(city, query_lastest_time_point);
   };
+  */
+  getWeatherDataForCity('北京', query_lastest_time_point);
 };
 
 updateData();
