@@ -6,6 +6,7 @@ var dateformat = require('dateformat');
 
 var api = new AqiApi(C.PM25APPKEY);
 
+// 有天气数据的城市
 var aqiSupportCities = [ '上海','东莞','中山','丽水','乌鲁木齐','佛山','保定','兰州','北京','南京',
 '南宁','南昌','南通','厦门','台州','合肥','呼和浩特','哈尔滨','唐山','嘉兴','大连','天津','太原','宁波',
 '宿迁','常州','广州','廊坊','张家口','徐州','惠州','成都','扬州','承德','拉萨','无锡','昆明','杭州',
@@ -13,8 +14,10 @@ var aqiSupportCities = [ '上海','东莞','中山','丽水','乌鲁木齐','佛
 '福州','秦皇岛','绍兴','肇庆','舟山','苏州','衡水','衢州','西宁','西安','贵阳','连云港','邢台','邯郸',
 '郑州','重庆','金华','银川','镇江','长春','长沙','青岛' ];
 
+// 有美使馆数据的城市
 var usemSupportCities = ['北京', '上海', '广州', '成都'];
 
+// 读取某城市气象部空气污染数据
 var getChineseDataForCity = function(city, lastest_time_point) {
   console.log('get chinese aqi data for city: ', city);
   db.aqi.find(
@@ -64,6 +67,7 @@ var getChineseDataForCity = function(city, lastest_time_point) {
   );
 };
 
+// 读取某城市美使馆空气污染数据
 var getUsemDataForCity = function(city, lastest_time_point) {
   console.log('get useem aqi data for city: ', city);
   db.usemaqi.find({'area': city, 'time_point': lastest_time_point}, function(error, result) {
@@ -106,11 +110,11 @@ var getUsemDataForCity = function(city, lastest_time_point) {
           }
         }
       });
-    
     }
   });
 };
 
+// 获取某城市天气预报
 var getWeatherDataForCity = function(city, lastest_time_point) {
   console.log('get weather data for city: ', city);
     db.weather.find({'area': city, 'time_point': lastest_time_point}, function(error, result) {
@@ -170,9 +174,10 @@ var updateData = function() {
   var utcTime = serverTime + now.getTimezoneOffset() * 60000;
   var clientTime = utcTime + C.timezone * 3600000;
   var requestTime =  new Date(clientTime);
+  // 时间戳
   var query_lastest_time_point = dateformat(requestTime, 'yyyy-mm-dd-HH');
   console.log('update data at ', dateformat(requestTime, 'yyyy-mm-dd HH:MM:ss'));
-  /*
+  
   for (var i = 0, iMax = aqiSupportCities.length; i < iMax ; i++) {
     var city = aqiSupportCities[i];
     getChineseDataForCity(city, query_lastest_time_point);
@@ -181,15 +186,14 @@ var updateData = function() {
     var city = usemSupportCities[i];
     getUsemDataForCity(city, query_lastest_time_point);
   };
-  */
-  getWeatherDataForCity('北京', query_lastest_time_point);
+  //getWeatherDataForCity('北京', query_lastest_time_point);
 };
 
 updateData();
-/*
+
 setInterval(function(){
     updateData();
 }, 1000 * 60 * C.robotFrequency);
-*/
+
 
 
