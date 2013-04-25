@@ -1,3 +1,11 @@
+
+var AqiApi = require('chineseaqi');
+var C = require('./config').config();
+var db = require('mongojs').connect(C.db.url , C.db.collections);
+var api = new AqiApi(C.PM25APPKEY);
+var ejs = require('ejs');
+var dateformat = require('dateformat');
+
 var getRealnameByNickname = function(nickname) {
   var names = {
     '帝都': '北京',
@@ -134,9 +142,9 @@ var getChineseData = function(params) {
           });
           if (!result || result.length == 0) {
             db.aqi.save({
-              area: city,
+              area: params.city,
               data: data,
-              time_point: now_str,
+              time_point: params.time_piont,
               time_point_of_latest_data: time_point_of_latest_data
             } , function(error) {
               if (error) {
@@ -144,7 +152,7 @@ var getChineseData = function(params) {
               }
             });
           } else {
-            db.aqi.update({'area': city, 'time_point': now_str}, 
+            db.aqi.update({'area': city, 'time_point': params.time_point}, 
                 {$set: {data: data, time_point_of_latest_data: time_point_of_latest_data}},
                 function(err, updated) {
                   if (err || !updated) {
@@ -170,8 +178,9 @@ var getChineseData = function(params) {
 };
 
 module.exports = {
-  getUsemData: getUsemData,
+  getChineseData: getChineseData,
   getUsemData: getUsemData,
   getWeatherData: getWeatherData,
-  sendMessage: sendMessage
+  sendMessage: sendMessage,
+  getRealnameByNickname: getRealnameByNickname
 };

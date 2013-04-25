@@ -2,26 +2,18 @@
 /**
  * Module dependencies.
  */
-
 var C = require('./config').config();
 var express = require('express')
   , routes = require('./routes');
 var url = require('url');
 var sha1 = require('sha1');
 var dateformat = require('dateformat');
-//var AqiApi = require('./chineseaqi.js');
-var AqiApi = require('chineseaqi');
-//var wechat = require('./wechat.js');
 var wechat = require('wechat');
-var ejs = require('ejs');
 var http = require('http');
 var connect = require('connect');
 var chinesecities = require('chinesecities');
 var app = connect();
 app.use(connect.query());
-
-var api = new AqiApi(C.PM25APPKEY);
-var db = require('mongojs').connect(C.db.url , C.db.collections);
 
 var tool = require('./aqitool.js');
 
@@ -116,7 +108,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
   var now_str = dateformat(requestTime, 'yyyy-mm-dd-HH');
   
   var requestCity = message.Content;
-  requestCity = getRealnameByNickname(requestCity);
+  requestCity = tool.getRealnameByNickname(requestCity);
 
   tool.getChineseData({
     city: requestCity,
