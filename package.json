@@ -13,5 +13,7 @@
     , "mongojs": ">= 0.0.1"
     , "dateformat": ">= 0.9.0-1.2.3"
     , "chinesecities": ">= 0.0.1"
+    , "MD5": ">= 0.0.1"
+    , "superagent": ">= 0.0.1"
   }
 }
