@@ -1,0 +1,4 @@
+# 每小时过5分时抓取数据 
+5 * * * * /usr/local/bin/node /var/www/aqi.cutefool.net/init/robot.js > /var/opt/node/log/weiair-robot.log 2>&1
+#每小时过10分时推送数据
+10 * * * * /usr/local/bin/node /var/www/aqi.cutefool.net/init/pushMessage.js > /var/opt/node/log/weiair-push-messages.log 2>&1

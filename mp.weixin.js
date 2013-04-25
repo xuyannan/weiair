@@ -1,6 +1,5 @@
 var md5 = require('MD5');
 var request = require('superagent');
-var pwd = md5('141900xyn');
 
 var login = function(params) {
   request.post('http://mp.weixin.qq.com/cgi-bin/login?lang=zh_CN')
@@ -20,7 +19,7 @@ var login = function(params) {
             params.callback(cookie, token);
           }
         } else {
-          console.log('login error');
+          console.log('login error', res.text);
         }
       }
     });
@@ -42,7 +41,6 @@ var getMessages = function(params) {
 
 // push test message
 var pushTextMessage = function(params) {
-  console.log(params);
   request.post('http://mp.weixin.qq.com/cgi-bin/singlesend?t=ajax-response&lang=zh_CN')
     .set('Cookie', params.cookie)
     .set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
@@ -78,27 +76,33 @@ var matchMessage = function(params) {
     cookie: params.cookie,
     token: params.token,
     callback: function(cookie, token, messages) {
-      var lastestMessage = messages[0];
-      console.log(lastestMessage);
+      var matchedMessage = undefined;
       for(var i = 0, iMax = messages.length; i < iMax; i ++) {
         var m = messages[i];
         if (m.dateTime == params.message.CreateTime && m.content == params.message.Content) {
+          matchedMessage = m;
           if (params.callback && typeof(params.callback) == 'function') {
             params.callback(m);
             break;
           }
         }
       }
+      if (matchedMessage == undefined) {
+        console.log('no message matched on mp.weixin');
+        if (params.errorCallback && typeof(params.errorCallback) == 'function') {
+          params.errorCallback();
+        }
+      }
     }
   });
 };
 
+/*
 login({
   username: 'xyn0563@126.com',
   pwd: pwd,
   callback: function(cookie, token) {
     console.log('login success')
-    /*
     getMessages({
       cookie: cookie,
       token: token
@@ -109,11 +113,18 @@ login({
       content: 'helloworld',
       tofakeid: '14114475'
     });
-    */
     matchMessage({
       cookie: cookie,
       token: token
     });
   }
 });
+*/
+
+module.exports = {
+  login: login,
+  getMessages: getMessages,
+  matchMessage: matchMessage,
+  pushTextMessage: pushTextMessage
+};
 

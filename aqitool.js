@@ -18,15 +18,16 @@ var getRealnameByNickname = function(nickname) {
   }
 };
 
+var tpl = '<%=area%>';
+tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%><%}%>';
+tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
+tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp1%>~<%=weather.temp2%><%}%>\n\r[更新时间] <%=weather.ptime%>'
+
 var sendMessage = function(data, res) {
   if (!data.chinese && !data.usem && !data.weather) {
     res.reply('Sorry，目前没有这个地方的空气污染指数或天气数据，换个别的城市试试~');
     return ;
   }
-  var tpl = '<%=area%>';
-  tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%><%}%>';
-  tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
-  tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp1%>~<%=weather.temp2%><%}%>\n\r[更新时间] <%=weather.ptime%>'
   var compiled = ejs.compile(tpl);
   var message = compiled(data);
   res.reply(message);
@@ -46,7 +47,7 @@ var getWeatherData = function(params) {
     errorCallback: function() {
       console.log('get weather data for ', data.area, ' error');
       if (params.errorCallback && typeof(params.errorCallback) == 'function') {
-        params.errorCallback(weatherData);
+        params.errorCallback(data);
       }
     }
   });
@@ -152,7 +153,7 @@ var getChineseData = function(params) {
               }
             });
           } else {
-            db.aqi.update({'area': city, 'time_point': params.time_point}, 
+            db.aqi.update({'area': params.city, 'time_point': params.time_point}, 
                 {$set: {data: data, time_point_of_latest_data: time_point_of_latest_data}},
                 function(err, updated) {
                   if (err || !updated) {
@@ -182,5 +183,6 @@ module.exports = {
   getUsemData: getUsemData,
   getWeatherData: getWeatherData,
   sendMessage: sendMessage,
-  getRealnameByNickname: getRealnameByNickname
+  getRealnameByNickname: getRealnameByNickname,
+  template: tpl
 };

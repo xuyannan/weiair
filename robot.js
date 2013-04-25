@@ -190,10 +190,10 @@ var updateData = function() {
 };
 
 updateData();
-
+/*
 setInterval(function(){
     updateData();
 }, 1000 * 60 * C.robotFrequency);
-
+*/
 
 
