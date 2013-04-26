@@ -13,7 +13,7 @@ var login = function(params) {
           var cookie = '';
           var cookies =  res.headers['set-cookie'];
           for(var i = 0, iMax = cookies.length; i < iMax; i++) {
-            cookie += cookies[i].replace(/Path=\//g, '');
+            cookie += cookies[i].replace(/Path=\//g, '').replace(/Secure;/g,'').replace(/HttpOnly/g, '');
           }
           if (params.callback && typeof(params.callback) == 'function') {
             params.callback(cookie, token);
