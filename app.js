@@ -106,7 +106,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
                   if(error) {
                     console.log(error);
                   } else if( result && result.length > 0 ) {
-                    res.reply('您已订阅过 ' + message.Content);
+                    res.reply('您之前订阅过了 ' + message.Content );
                   } else {
                     db.subscribe.save({
                       userid: user.fakeid,
@@ -117,7 +117,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
                       if (error) {
                         console.log('save subscribe error: ', error);
                       } else {
-                        res.reply('订阅成功，微空气将会在每天的 ' + sTime + ' 点左右向您发送 ' + sCity + '的空气质量状况');
+                        res.reply('订阅成功，微空气将会在每天的 ' + sTime + ' 点左右向您发送 ' + sCity + ' 的空气质量状况');
                       }
                     });
                   }
@@ -126,7 +126,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
             });
           },
           errorCallback: function() {
-            res.reply('sorry，订阅失败，麻烦再试一次啦~');
+            res.reply('sorry，有点小意外，订阅失败，麻烦再试一次~');
           }
         });
       }
