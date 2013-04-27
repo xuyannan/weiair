@@ -19,7 +19,7 @@ var usemSupportCities = ['北京', '上海', '广州', '成都'];
 
 // 读取某城市气象部空气污染数据
 var getChineseDataForCity = function(city, lastest_time_point) {
-  console.log('get chinese aqi data for city: ', city);
+  //console.log('get chinese aqi data for city: ', city);
   db.aqi.find(
     {area: city, time_point: lastest_time_point},
     function(error, result) {
@@ -103,7 +103,7 @@ var getUsemDataForCity = function(city, lastest_time_point) {
                   if (err || !updated) {
                     console.log('update usemaqi error: ', err);
                   } else {
-                    console.log('usem data update');
+                    console.log(city, 'usem data update');
                   }
                 }
             ); 
