@@ -58,7 +58,31 @@ var getUsemData = function(params) {
   var data = params.data;
   var request_time = params.request_time;
   db.usemaqi.find({'area': data.area, 'time_point': request_time}, function(error, result) {
-    if(error) {
+    if(error) { // 数据库down掉的时候直接从网络获取数据
+      console.log('mongodb is down while getUsemData for city ', params.area);
+      api.getUsemPm25ForCity({
+        city: data.area,
+        errorCallback: function() {
+          console.log('no usem data for city: ', data.area);
+          params.next({
+            area: data.area,
+            chinese: data.chinese,
+            usem: null
+          });
+        },
+        callback: function(res) {
+          var usemdata = res[0];
+          var d = new Date(usemdata.time_point);
+          var time_point_of_latest_data = dateformat(d, 'yyyy-mm-dd-HH');
+          usemdata.time_point = dateformat(d, 'HH:00:00');
+          usemdata.quality = usemdata.quality.replace(/\(.*\)/, '');
+          params.next({
+            area: data.area,
+            chinese: data.chinese,
+            usem: usemdata
+          });
+        }
+      });
     } else if (result && result.length > 0 && request_time == result[0].time_point_of_latest_data) {
         console.log('命中usem cache');
         data.usem = result[0].data;
@@ -121,10 +145,29 @@ var getUsemData = function(params) {
 
 var getChineseData = function(params) {
   db.aqi.find({'area': params.city, 'time_point': params.time_point}, function(error, result) {
-    if (error) {
+    if (error) { // 数据库down掉的话，直接从网络获取数据
+      console.log('mongodb down while getChineseData for ', params.city);
+      api.getAvgPm25ForCity({city: params.city, 
+        callback: function(data){
+          var time_point_of_latest_data = data.time_point.substring(0, 13).replace('T', '-');
+          data.time_point = data.time_point.substring(11, data.time_point.length-1);
+          params.next({
+              area: params.city,
+              chinese: data,
+              usem: null
+          });
+        },
+        errorCallback: function(data) {
+          console.log('no chinese data for ', params.city);
+          params.next({
+            area: params.city,
+            chinese: null
+          });
+        }
+      });
+
     } else if (result && result.length > 0 && params.time_point == result[0].time_point_of_latest_data ) {
       console.log('命中chinese cache');
-      //params.next(result[0]);
       params.next({
           area: params.city,
           chinese: result[0].data,
@@ -166,7 +209,6 @@ var getChineseData = function(params) {
           }
         },
         errorCallback: function(data) {
-          // res.reply('该城市还没有pm2.5数据，试试别的城市~');
           console.log('no chinese data for ', params.city);
           params.next({
             area: params.city,
