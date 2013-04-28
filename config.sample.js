@@ -9,6 +9,7 @@ exports.config = function(){
         'mp': {
           'username': 'your-username-for-mp.weixin.qq.com',
           'pwd': 'your-pwd'
-        }
+        },
+        'email': 'YOUR@EMAIL'
     };
 }

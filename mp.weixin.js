@@ -20,6 +20,13 @@ var login = function(params) {
           }
         } else {
           console.log('login error', res.text);
+          if (params.errorCallback && typeof(params.errorCallback) == 'function') {
+            params.errorCallback(res);
+          }
+        }
+      } else {
+        if (params.errorCallback && typeof(params.errorCallback) == 'function') {
+          params.errorCallback(res);
         }
       }
     });
