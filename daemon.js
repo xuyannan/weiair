@@ -11,6 +11,7 @@ var serverTime = now.getTime();
 var utcTime = serverTime + now.getTimezoneOffset() * 60000;
 var clientTime = utcTime + C.timezone * 3600000;
 var requestTime =  new Date(clientTime);
+var exec = require('child_process').exec
 
 var now_str = dateformat(requestTime, 'yyyy-mm-dd HH:MM:ss');
 
@@ -19,12 +20,18 @@ db.users.find({}, function(error, resutl) {
   if (error) {
     var msg = new Email({
       from: 'aqi@cutefool.net',
-      to: 'xyn0563@gmail.com',
+      to: C.email,
       subject: '[' + now_str + '] 我擦数据库挂了!',
       body: error + ''
     });
     msg.send(function(err){
       console.log(err);
+    });
+    console.log('!!!!restart mongodb!!!!');
+    exec('sudo /etc/init.d/mongodb start', function(error, stdout, stderr){
+      if (error) {
+        console.log('start mongodb error:', error);
+      }
     });
   } else {
     console.log('[', now_str, '] database is all right');
@@ -41,7 +48,7 @@ weixinmp.login({
   errorback: function(res) {
     var msg = new Email({
       from: 'aqi@cutefool.net',
-      to: 'xyn0563@gmail.com',
+      to: C.email,
       subject: '[' + now_str + '] 微信sb了!',
       body: res + ''
     });

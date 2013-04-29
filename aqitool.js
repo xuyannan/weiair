@@ -19,7 +19,7 @@ var getRealnameByNickname = function(nickname) {
 };
 
 var tpl = '<%=area%>';
-tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%><%}%>';
+tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%><%}%>\n\r数据来自http://pm25.in';
 tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
 tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp1%>~<%=weather.temp2%><%}%>\n\r[更新时间] <%=weather.ptime%>'
 
@@ -59,7 +59,7 @@ var getUsemData = function(params) {
   var request_time = params.request_time;
   db.usemaqi.find({'area': data.area, 'time_point': request_time}, function(error, result) {
     if(error) { // 数据库down掉的时候直接从网络获取数据
-      console.log('mongodb is down while getUsemData for city ', params.area);
+      console.log('mongodb is down while getUsemData for city ', data.area);
       api.getUsemPm25ForCity({
         city: data.area,
         errorCallback: function() {

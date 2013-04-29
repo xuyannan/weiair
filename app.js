@@ -26,6 +26,11 @@ var saveOrUpdateUser = function(params){
   var fakeid = params.fakeid;
   db.users.find({fakeid: fakeid}, function(error, result){
     if(error) {
+      console.log('saveOrUpdateUser error');
+      if(params.errorCallback && typeof(params.errorCallback) != 'undefined') {
+        params.errorCallback();
+      }
+
     } else if(result && result.length > 0) {
       if(params.callback && typeof(params.callback) != 'undefined') {
         params.callback(result[0]);
@@ -122,6 +127,9 @@ app.use('/', wechat('weiair', function (req, res, next) {
                     });
                   }
                 });
+              },
+              errorCallback: function() {
+                res.reply('sorry，有点小意外，订阅失败，麻烦过一小会再试~');
               }
             });
           },
@@ -140,7 +148,8 @@ app.use('/', wechat('weiair', function (req, res, next) {
     var sCity = matched[1];
     db.subscribe.remove({xxid: sUser, city: sCity}, function(error) {
       if (error) {
-        console.log(error);
+        console.log('error while unsubscribe:', error);
+        res.reply('sorry，有点小意外，操作失败，麻烦过一小会再试~');
       } else {
         res.reply('操作成功，您已退订了 ' + sCity + ' 的空气质量状况~');
       }
