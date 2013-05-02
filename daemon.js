@@ -15,6 +15,30 @@ var exec = require('child_process').exec
 
 var now_str = dateformat(requestTime, 'yyyy-mm-dd HH:MM:ss');
 
+// 主服务
+exec('ps -ef | grep -v grep | grep -v vim | grep node | grep aqi.cutefool.net | grep app.js', function(error, stdout, stderr){
+  if(stdout && stdout!='') {
+    console.log('[', now_str, '] main service is all right');
+  } else {
+    var msg = new Email({
+      from: 'aqi@cutefool.net',
+      to: C.email,
+      subject: '[' + now_str + '] 微空气主服务挂了!',
+      body: error + ''
+    });
+    msg.send(function(err){
+      console.log(err);
+    });
+    console.log('!!!!restart main service!!!!');
+    exec('sudo start weiair', function(error, stdout, stderr){
+      if (error) {
+        console.log('start main service error:', error);
+      }
+    });
+  }
+});
+
+
 // 数据库
 db.users.find({}, function(error, resutl) {
   if (error) {
