@@ -44,6 +44,19 @@ weixinmp.login({
   pwd: md5(C.mp.pwd),
   callback: function(cookie, token) {
     console.log('[', now_str, '] weixin is all right');
+    db.failedpush.find({success: 0, pushtime:dateformat(requestTime, 'yyyy-mm-dd-HH')}, function(error, result){
+      if(error) {
+      } else if(result && result.length > 0) {
+        for(var i = 0, iMax = result.length; i < iMax; i++) {
+          var res = result[i];
+          repush({
+            cookie: cookie,
+            token: token,
+            msg: res
+          });
+        }
+      }
+    });
   },
   errorback: function(res) {
     var msg = new Email({
@@ -57,3 +70,26 @@ weixinmp.login({
     });
   }
 });
+
+// 重新push发送失败的
+var repush = function(params) {
+  console.log('repushing: ', params.msg);
+  weixinmp.pushTextMessage({
+    cookie: params.cookie,
+    token: params.token,
+    content: params.msg.content,
+    tofakeid: params.msg.tofakeid,
+    errorCallback: function() {
+    },
+    callback: function() {
+      params.msg.success = 1;
+      db.failedpush.save(params.msg);
+    }
+  });
+};
+
+setTimeout(function(){
+  console.log('exit daemon');
+  process.exit(0);
+}, 0.5*60*1000
+);

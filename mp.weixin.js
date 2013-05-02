@@ -69,7 +69,19 @@ var pushTextMessage = function(params) {
       type: 1
     })
     .end(function(res){
-      console.log(res.text);
+      var result = JSON.parse(res.text);
+      if(result.ret == "0" && result.msg == "ok") {
+        console.log('push to ', params.tofakeid, ' success');
+        if(params.callback && typeof(params.callback) == 'function') {
+          params.callback();
+        }
+      } else {
+        console.log('error:' , result.msg);
+        //TODO: save error log to database, handle them in daemon later
+        if(params.errorCallback && typeof(params.errorCallback) == 'function') {
+          params.errorCallback();
+        }
+      }
     });
 };
 
