@@ -157,8 +157,6 @@ app.use('/', wechat('weiair', function (req, res, next) {
     return ;
   }
 
-  var city = message.Content;
-  console.log(dateformat(new Date(), 'yyyy-mm-dd HH:MM:ss'), '[', message.Content, ']', '\r\r');
 
   var now = new Date();
   var serverTime = now.getTime();
@@ -166,6 +164,9 @@ app.use('/', wechat('weiair', function (req, res, next) {
   var clientTime = utcTime + C.timezone * 3600000;
   var requestTime =  new Date(clientTime);
   var now_str = dateformat(requestTime, 'yyyy-mm-dd-HH');
+
+  var city = message.Content;
+  console.log(dateformat(requestTime, 'yyyy-mm-dd HH:MM:ss'), '[', message.Content, ']', '\r\r');
   
   var requestCity = message.Content;
   requestCity = tool.getRealnameByNickname(requestCity);
@@ -177,6 +178,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
       //getUsemData(data, now_str);
       tool.getUsemData({
         data: data, 
+        method: C.usemresource,
         request_time: now_str,
         next: function(data) {
           tool.getWeatherData({

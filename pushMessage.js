@@ -31,6 +31,7 @@ var sendMessage = function(cookie, token, sub, queryTimePoint) {
     next: function(data) {
       tool.getUsemData({
         data: data, 
+        method: C.usemresource,
         request_time: queryTimePoint,
         next: function(data) {
           tool.getWeatherData({

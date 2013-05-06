@@ -75,6 +75,7 @@ var getUsemDataForCity = function(city, lastest_time_point) {
     } else if (result && result.length > 0 && lastest_time_point == result[0].time_point_of_latest_data) {
     } else {
       api.getUsemPm25ForCity({
+        method: C.usemresource,
         city: city,
         errorCallback: function() {
           console.log('no usem data for city: ', data.area);
@@ -190,10 +191,10 @@ var updateData = function() {
 };
 
 updateData();
-/*
-setInterval(function(){
-    updateData();
-}, 1000 * 60 * C.robotFrequency);
-*/
+setTimeout(function(){
+  console.log('exit robot');
+  process.exit(0);
+}, 0.5*60*1000
+);
 
 

@@ -61,6 +61,7 @@ var getUsemData = function(params) {
     if(error) { // 数据库down掉的时候直接从网络获取数据
       console.log('mongodb is down while getUsemData for city ', data.area);
       api.getUsemPm25ForCity({
+        method: params.method,
         city: data.area,
         errorCallback: function() {
           console.log('no usem data for city: ', data.area);
@@ -94,6 +95,7 @@ var getUsemData = function(params) {
     } else {
       api.getUsemPm25ForCity({
         city: data.area,
+        method: params.method,
         errorCallback: function() {
           console.log('no usem data for city: ', data.area);
           params.next({
