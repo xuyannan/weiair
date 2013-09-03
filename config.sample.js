@@ -2,7 +2,7 @@ exports.config = function(){
     return {
         'db' : {
             'url' : 'weiair',
-            'collections' : ['aqi', 'usemaqi', 'weather', 'subscribe']
+            'collections' : ['aqi', 'usemaqi', 'weather', 'subscribe', 'users', 'failedpush']
         },
         'timezone': 8,
         'PM25APPKEY': 'your-appkey-for-pm25.in',

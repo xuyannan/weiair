@@ -16,7 +16,7 @@ var exec = require('child_process').exec
 var now_str = dateformat(requestTime, 'yyyy-mm-dd HH:MM:ss');
 
 // 主服务
-exec('ps -ef | grep -v grep | grep -v vim | grep node | grep aqi.cutefool.net | grep app.js', function(error, stdout, stderr){
+exec('ps -ef | grep -v grep | grep -v vim | grep node | grep weiair | grep app.js', function(error, stdout, stderr){
   if(stdout && stdout!='') {
     console.log('[', now_str, '] main service is all right');
   } else {
@@ -107,7 +107,7 @@ var repush = function(params) {
     },
     callback: function() {
       params.msg.success = 1;
-      db.failedpush.save(params.msg);
+      db.failedpush.save(params.msg, function(err) {});
     }
   });
 };
