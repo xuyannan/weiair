@@ -19,10 +19,15 @@ var getRealnameByNickname = function(nickname) {
 };
 
 var tpl = '<%=area%>';
+tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r污染指数：<%=chinese.aqi%>，pm2.5浓度：<%=chinese.pm2_5%>，空气质量：<%=chinese.quality%>。更新时间：<%=chinese.time_point%><%}%>。数据来自http://pm25.in';
+tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r污染指数：<%=usem.aqi%>，pm2.5浓度：<%=usem.pm2_5%>，空气质量：<%=usem.quality%>，更新时间：<%=usem.time_point%><% } %>';
+tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp1%>~<%=weather.temp2%><%}%>，更新时间：<%=weather.ptime%>';
+tpl += '\n\r\n\r微空气 愿为您的健康做一点点小贡献。欢迎关注~';
+/*
 tpl += '<%if (!!chinese && chinese.aqi!= undefined) {%>\n\r[污染指数] <%=chinese.aqi%>\n\r[pm2.5浓度] <%=chinese.pm2_5%>\n\r[空气质量] <%=chinese.quality%> \n\r[更新时间] <%=chinese.time_point%><%}%>\n\r数据来自http://pm25.in';
 tpl += '<%if (!!usem) {%>\n\r\n\r美使馆数据\n\r[污染指数] <%=usem.aqi%>\n\r[pm2.5浓度] <%=usem.pm2_5%>\n\r[空气质量] <%=usem.quality%> \n\r[更新时间] <%=usem.time_point%><% } %>';
-tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp1%>~<%=weather.temp2%><%}%>\n\r[更新时间] <%=weather.ptime%>'
-
+tpl += '<%if (!!weather) {%>\n\r\n\r天气预报\n\r<%=weather.weather%> <%=weather.temp1%>~<%=weather.temp2%><%}%>\n\r[更新时间] <%=weather.ptime%>';
+*/
 var sendMessage = function(data, res) {
   if (!data.chinese && !data.usem && !data.weather) {
     res.reply('Sorry，目前没有这个地方的空气污染指数或天气数据，换个别的城市试试~');

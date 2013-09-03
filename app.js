@@ -56,7 +56,10 @@ app.use('/public', express.static(__dirname + "/public"));
 app.use('/', wechat('weiair', function (req, res, next) {
   // 微信输入信息都在req.weixin上
   var welcome = '感谢您关注微空气！发送城市名称，如"北京"或"beijing"即可获取空气质量数据~\n\r您可以发送"?"或"help"来获取帮助';
-  var help = '[查询] 发送城市名称，如"北京"或"beijing"即可获取空气质量数据。\n\r\n\r[订阅] 发送"城市@时间"来订阅您所关心的城市，如"北京@10"，微空气将会在每天的10点左右向您推送北京的空气质量数据。\n\r\n\r[退订] 发送"北京@no"，即可退订北京的空气质量数据。\n\r\n\r[帮助] 发送"?"或"help"或"帮助"获得帮助';
+  var help = '[查询] 发送城市名称，如"北京"或"beijing"即可获取空气质量数据。';
+  help += '[订阅] 发送"城市@时间"来订阅您所关心的城市，如"北京@10"，微空气将会在每天的10点左右向您推送北京的空气质量数据。';
+  help += '[退订] 发送"北京@no"，即可退订北京的空气质量数据。';
+  help += '[帮助] 发送"?"或"help"或"帮助"获得帮助';
   var message = req.weixin;
   if (message.MsgType == 'event' && message.Event == 'subscribe') {
     res.reply(welcome);
@@ -71,7 +74,7 @@ app.use('/', wechat('weiair', function (req, res, next) {
   var unsubscribeCityReg = /^([^@]{2,8})@NO/i;
   var querySubscribed = /\?\?/;
   var helpCommand = /^\?|？|help|帮助/i;
-  var welcomeCommand = /^hello|^hi|^[您你]好|/i
+  var welcomeCommand = /^hello|^hi|^[您你]好|hoho|haha/i
   /*
   if (message.Content.match(welcomeCommand)) {
     res.reply(welcome);
