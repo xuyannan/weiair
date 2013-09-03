@@ -2,9 +2,16 @@ var md5 = require('MD5');
 var request = require('superagent');
 
 var login = function(params) {
-  request.post('http://mp.weixin.qq.com/cgi-bin/login?lang=zh_CN')
+  request.post('https://mp.weixin.qq.com/cgi-bin/login?lang=zh_CN')
     .send({username: params.username, pwd: params.pwd, imgcode: '', f: 'json'})
-    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .type('form')
+    .set({'X-Requested-With': 'XMLHttpRequest',
+          'Accept':  'application/json, text/javascript, */*; q=0.01',
+          'Accept-Language': 'zh-cn,zh;q=0.8,en-us;q=0.5,en;q=0.3',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Referer': 'https://mp.weixin.qq.com/'
+    })
+    .set('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Firefox/23.0')
     .end(function(res){
       if (res.ok) {
         if(JSON.parse(res.text).ErrCode == 0) {
@@ -33,12 +40,12 @@ var login = function(params) {
 };
 
 var getMessages = function(params) {
-  request.get('http://mp.weixin.qq.com/cgi-bin/getmessage?t=wxm-message&token='+params.token+'&lang=zh_CN&count=50')
+  request.get('https://mp.weixin.qq.com/cgi-bin/message?t=message/list&day=7&token='+params.token+'&lang=zh_CN&count=50')
     .set('Cookie', params.cookie)
     .end(function(res){
       var text = res.text;
       text = text.replace(/[\t\n]/g, '');
-      text = text.match(/<script type="json" id="json-msgList">(.*?)<\/script>/)[1];
+      text = text.match(/list : \(\{"msg_item":(.*?)\}\)\.msg_item/)[1];
       var messageArray = eval(text);
       if (params.callback && typeof(params.callback) == 'function') {
         params.callback(params.cookie, params.token, messageArray);
@@ -91,6 +98,7 @@ var pushTextMessage = function(params) {
  * params.message: 接收到的微信
  **/
 var matchMessage = function(params) {
+  console.log(params);
   getMessages({
     cookie: params.cookie,
     token: params.token,
@@ -98,7 +106,7 @@ var matchMessage = function(params) {
       var matchedMessage = undefined;
       for(var i = 0, iMax = messages.length; i < iMax; i ++) {
         var m = messages[i];
-        if (m.dateTime == params.message.CreateTime && m.content == params.message.Content) {
+        if (m.date_time == params.message.CreateTime && m.content == params.message.Content) {
           matchedMessage = m;
           if (params.callback && typeof(params.callback) == 'function') {
             params.callback(m);
@@ -119,7 +127,7 @@ var matchMessage = function(params) {
 /*
 login({
   username: 'xyn0563@126.com',
-  pwd: pwd,
+  pwd: md5(''),
   callback: function(cookie, token) {
     console.log('login success')
     getMessages({
@@ -139,7 +147,6 @@ login({
   }
 });
 */
-
 module.exports = {
   login: login,
   getMessages: getMessages,
