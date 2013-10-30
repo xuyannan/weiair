@@ -66,14 +66,16 @@ var pushTextMessage = function(params) {
     .set('Origin', 'mp.weixin.qq.com')
     .set('X-Requested-With', 'XMLHttpRequest')
     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:20.0) Gecko/20100101 Firefox/20.0')
-    .set('Referer', 'http://mp.weixin.qq.com/cgi-bin/singlemsgpage?token='+params.token+'&fromfakeid='+params.tofakeid+'&msgid=&source=&count=20&t=wxm-singlechat&lang=zh_CN')
+    .set('Referer', 'https://mp.weixin.qq.com/cgi-bin/singlesendpage?tofakeid='+params.tofakeid+'&t=message/send&action=index&token='+params.token+'&lang=zh_CN')
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .send({
       ajax: 1,
+      imgcode: '',
       token: params.token,
       content: params.content,
       tofakeid: params.tofakeid,
-      type: 1
+      type: 1,
+      t: 'ajax-response'
     })
     .end(function(res){
       var result = JSON.parse(res.text);
