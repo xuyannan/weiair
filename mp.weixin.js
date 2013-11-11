@@ -79,7 +79,7 @@ var pushTextMessage = function(params) {
     })
     .end(function(res){
       var result = JSON.parse(res.text);
-      if(result.ret == "0" && result.msg == "ok") {
+      if(result.base_resp && result.base_resp.ret == "0" && result.base_resp.err_msg == "ok") {
         console.log('push to ', params.tofakeid, ' success');
         if(params.callback && typeof(params.callback) == 'function') {
           params.callback();
